@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    /* Structure des fichiers */
+    "rootDir": "./src",        // IMPORTANT : Le dossier où vous codez
+    "outDir": "./dist",        // IMPORTANT : Le dossier généré par le build
+
+    /* Configuration Node.js standard */
+    "target": "es2016",        // Version de JS compatible
+    "module": "commonjs",      // Le standard pour Node (évite les bugs d'import)
+    "esModuleInterop": true,   // Permet d'importer des vieux modules JS proprement
+    
+    /* Vérifications strictes (Gardez-les, c'est bien !) */
+    "strict": true,
+    "skipLibCheck": true,      // Accélère la compilation
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]      // On ne compile que ce qu'il y a dans src
+}
