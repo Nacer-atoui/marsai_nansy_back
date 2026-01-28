@@ -2,11 +2,11 @@
   "name": "marsai_nansy",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.ts",
   "scripts": {
-    "start": "node dist/index.js",
-    "build": "tsc",
-    "dev": "nodemon src/index.ts",
+    "start": "node dist/server.js",
+  "build": "tsc",
+  "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,js,json}\""
@@ -18,7 +18,8 @@
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mysql2": "^3.16.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
