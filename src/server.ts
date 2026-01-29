@@ -1,37 +1,36 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import pool from './config/database'; // On importe la connexion du fichier précédent
+import routerMovie from './routes/movie.routes'; // Importation des routes pour les films
 
+// Chargement des variables d'environnement (depuis le fichier .env)
 dotenv.config();
 
+// Création de l'application Express
 const app = express();
-const port = process.env.PORT || 3000;
 
+// Définition du port (3000 par défaut si non spécifié dans le .env)
+const port = process.env.PORT || 3001;
+
+// --- Middlewares ---
+
+// Autorise les requêtes provenant d'autres domaines (Cross-Origin Resource Sharing)
 app.use(cors());
+
+// Permet à Express de lire et analyser le corps des requêtes en format JSON
 app.use(express.json());
 
-// Route pour récupérer les films
-app.get('/movie', async (req: Request, res: Response) => {
-  try {
-    // On lance la requête (on attend la réponse avec await)
-    const sql = 'SELECT * FROM movie';
-    // Avec mysql2/promise, query renvoie un tableau [rows, fields]
-    const [rows] = await pool.query(sql);
+// --- Routes ---
 
-    // On log pour voir ce qu'on a récupéré dans le terminal VS Code
-    console.log("Données récupérées :", rows);
+// Association de la route '/movie' avec notre routeur dédié
+// Toutes les requêtes vers http://localhost:3000/movie passeront par routerMovie
+app.use('/movie', routerMovie);
 
-    // On renvoie le résultat au format JSON
-    res.json(rows);
-
-  } catch (error: any) {
-    // Gestion des erreurs
-    console.error('❌ Erreur SQL:', error.message);
-    res.status(500).send('Erreur serveur');
-  }
+app.get('/', (req, res) => {
+  res.send('toto');
 });
 
+// --- Démarrage du serveur ---
 app.listen(port, () => {
   console.log(`Serveur lancé sur http://localhost:${port}`);
 });
