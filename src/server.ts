@@ -14,8 +14,20 @@ const port = process.env.PORT || 3001;
 
 // --- Middlewares ---
 
-// Autorise les requêtes provenant d'autres domaines (Cross-Origin Resource Sharing)
-app.use(cors());
+
+
+
+// Autorise les requêtes provenant de react - pont fronted 
+
+
+app.use(
+cors({
+origin: "http://localhost:5173",
+methods: ["GET", "POST", "PUT", "DELETE"],
+allowedHeaders: ["Content-Type", "Authorization"],
+})
+);
+
 
 // Permet à Express de lire et analyser le corps des requêtes en format JSON
 app.use(express.json());
