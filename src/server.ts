@@ -14,15 +14,15 @@ app.use(express.json());
 // Route pour récupérer les films
 app.get('/movie', async (req: Request, res: Response) => {
   try {
-    // 1. On lance la requête (on attend la réponse avec await)
+    // On lance la requête (on attend la réponse avec await)
     const sql = 'SELECT * FROM movie';
     // Avec mysql2/promise, query renvoie un tableau [rows, fields]
     const [rows] = await pool.query(sql);
 
-    // 2. On log pour voir ce qu'on a récupéré dans le terminal VS Code
+    // On log pour voir ce qu'on a récupéré dans le terminal VS Code
     console.log("Données récupérées :", rows);
 
-    // 3. On renvoie le résultat au format JSON
+    // On renvoie le résultat au format JSON
     res.json(rows);
 
   } catch (error: any) {
