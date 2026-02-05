@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 
 // Définition du port (3000 par défaut si non spécifié dans le .env)
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 
 // --- Middlewares ---
 
