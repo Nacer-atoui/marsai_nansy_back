@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { TranslationModel } from '../models/translationModel';
 import { TranslationService } from '../services/TranslationService';
+import { log } from 'console';
 
 export const syncTranslations = async (req: Request, res: Response) => {
   try {
@@ -24,7 +25,13 @@ export const syncTranslations = async (req: Request, res: Response) => {
  */
 export const getTranslations = async (req: Request, res: Response) => {
   try {
-    const { lang } = req.params; // 'fr' ou 'en'
+    let { lang } = req.params; // 'fr' ou 'en'
+    
+    if (lang == "fr-FR") {
+      lang = "fr"
+    } else if (lang == "en-EN") {
+      lang = "en"
+    }
 
     // On récupère les données via ton modèle
     // On force le typage en 'any[]' pour que TypeScript autorise le .reduce()
