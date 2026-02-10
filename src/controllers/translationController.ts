@@ -26,14 +26,14 @@ export const syncTranslations = async (req: Request, res: Response) => {
 export const getTranslations = async (req: Request, res: Response) => {
   try {
     let { lang } = req.params; // 'fr' ou 'en'
-    
+
     if (lang == "fr-FR") {
       lang = "fr"
     } else if (lang == "en-EN") {
       lang = "en"
     }
 
-    // On récupère les données via ton modèle
+    // On récupère les données via ton modèl
     // On force le typage en 'any[]' pour que TypeScript autorise le .reduce()
     const rows = await TranslationModel.getAll() as any[]; 
 
