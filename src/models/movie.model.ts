@@ -8,5 +8,12 @@ const getAll = async () => {
   return rows;
 };
 
+const getById = async (id: number) => {
+  const sql = 'SELECT * FROM movie where id = ?';
+  const [rows] = await pool.query(sql, [id]);
 
-export default { getAll };
+  console.log(rows);
+  return rows;
+};
+
+export default { getAll, getById };

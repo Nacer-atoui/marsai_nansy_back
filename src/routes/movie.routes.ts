@@ -8,4 +8,6 @@ const routerMovie = Router();
 
 routerMovie.get('/', MovieController.getAllMovies);
 
+routerMovie.get('/:id',MovieController.getMovieById);
+
 export default routerMovie;
