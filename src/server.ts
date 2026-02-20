@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import db from './config/database'; 
 import { TranslationService } from './services/TranslationService';
+import authRoutes from './routes/authRoutes';
 
 // Import de tes routes
 import routerMovie from './routes/movie.routes';
@@ -65,6 +66,9 @@ app.post('/api/admin/update-content', async (req: Request, res: Response) => {
 // Montage des autres routes
 app.use('/movie', routerMovie);
 app.use('/api', siteRoutes);
+app.use('/movie', routerMovie);
+app.use('/api', siteRoutes);
+app.use('/api/auth', authRoutes);
 
 // Lancement du Serveur
 app.listen(port, async () => {
