@@ -66,8 +66,6 @@ app.post('/api/admin/update-content', async (req: Request, res: Response) => {
 // Montage des autres routes
 app.use('/movie', routerMovie);
 app.use('/api', siteRoutes);
-app.use('/movie', routerMovie);
-app.use('/api', siteRoutes);
 app.use('/api/auth', authRoutes);
 
 // Lancement du Serveur
