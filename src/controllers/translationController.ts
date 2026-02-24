@@ -1,52 +1,70 @@
 import { Request, Response } from 'express';
 import { TranslationModel } from '../models/translationModel';
 import { TranslationService } from '../services/TranslationService';
-import { log } from 'console';
 
+/**
+ * Enregistre, Traduit via AI et Génère les fichiers JSON
+ */
 export const syncTranslations = async (req: Request, res: Response) => {
   try {
-    const { content_key, fr, en } = req.body;
+    let { content_key, fr, en } = req.body;
 
-    if (content_key && fr) {
-      await TranslationModel.upsert(content_key, fr, en || "");
+    // Validation de base
+    if (!content_key || !fr) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "La clé (content_key) et le texte français (fr) sont obligatoires." 
+      });
     }
 
+    // --- LOGIQUE DE TRADUCTION AUTOMATIQUE ---
+    // Si l'anglais est vide, on appelle le service DeepL
+    if (!en || en.trim() === "") {
+      console.log(`🤖 Traduction automatique via DeepL pour : ${content_key}`);
+      en = await TranslationService.translate(fr);
+    }
+
+    // --- ENREGISTREMENT BDD ---
+    // On utilise le modèle pour sauvegarder ou mettre à jour
+    await TranslationModel.upsert(content_key, fr, en);
+
+    // --- GÉNÉRATION DES FICHIERS PHYSIQUES ---
+    // On écrit les fichiers .json dans le dossier public du front
     await TranslationService.exportToJSON();
 
-    res.status(200).json({ success: true, message: "JSON générés avec succès" });
+    res.status(200).json({ 
+      success: true, 
+      message: "Traduction réussie et fichiers JSON générés",
+      data: { content_key, fr, en } 
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error("Erreur syncTranslations:", error);
     res.status(500).json({ success: false, error: "Erreur de synchronisation" });
   }
 };
 
 /**
- * Cette fonction permet au Front d'afficher les textes
+ * Optionnel : Permet au Front de récupérer les textes via API 
+ * (Même si lire le JSON directement est plus rapide)
  */
 export const getTranslations = async (req: Request, res: Response) => {
   try {
-    let { lang } = req.params; // 'fr' ou 'en'
+    let { lang } = req.params;
 
-    if (lang == "fr-FR") {
-      lang = "fr"
-    } else if (lang == "en-EN") {
-      lang = "en"
-    }
+    // Normalisation de la langue
+    const targetLang = (lang === "fr-FR" || lang === "fr") ? "fr" : "en";
 
-    // On récupère les données via ton modèl
-    // On force le typage en 'any[]' pour que TypeScript autorise le .reduce()
+    // Récupération depuis la BDD
     const rows = await TranslationModel.getAll() as any[]; 
 
-    // Sécurité au cas où la BDD renverrait quelque chose d'inattendu
     if (!Array.isArray(rows)) {
       return res.status(200).json({});
     }
 
-    // On transforme le tableau d'objets SQL en objet JSON { clé: texte }
+    // Transformation en format { "clé": "texte" }
     const formattedData = rows.reduce((acc: any, row: any) => {
-      // On s'assure que lang est traité comme une string pour l'indexation
-      const languageKey = lang as string;
-      acc[row.content_key] = row[languageKey] || "";
+      acc[row.content_key] = row[targetLang] || row.fr || "";
       return acc;
     }, {});
 
