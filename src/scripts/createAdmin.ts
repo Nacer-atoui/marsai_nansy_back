@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 
@@ -7,7 +8,7 @@ const createFirstAdmin = async (): Promise<void> => {
         host: 'localhost',
         user: 'root',
         password: '', // Ton mot de passe MySQL
-        database: 'ton_nom_de_bdd'
+        database: process.env.DB_NAME
     });
 
     const email: string = "admin@marsai.fr";
