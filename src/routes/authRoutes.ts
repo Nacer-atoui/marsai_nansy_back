@@ -1,18 +1,29 @@
 import { Router } from 'express';
-import { login } from '../controllers/authController';
-import { authenticateToken } from '../middlewares/authMiddleware'; // <-- Import indispensable
+import { login, registerStaff, getStaffList, deleteStaff } from '../controllers/authController';
+import { authenticateToken } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-// Route publique (accessible à tous pour se connecter)
-router.post('/login', login);
+/**
+ * MIDDLEWARE isAdmin corrigé : 
+ * Il transforme le rôle en minuscules avant de vérifier.
+ */
+const isAdmin = (req: any, res: any, next: any) => {
+    // On récupère le rôle et on le met en minuscules pour comparer facilement
+    const role = req.user?.role?.toLowerCase();
 
-// Route protégée (seul un utilisateur avec un token valide peut entrer)
-router.get('/dashboard-data', authenticateToken, (req, res) => {
-    res.json({ 
-        message: "Bienvenue sur le Dashboard !",
-        stats: "Données ultra secrètes accessibles uniquement avec le token" 
-    });
-});
+    // On autorise si c'est 'admin' OU 'super admin'
+    if (role === 'super admin' || role === 'admin') {
+        return next();
+    }
+    
+    return res.status(403).json({ message: "Accès refusé" });
+};
+
+// --- ROUTES ---
+router.post('/login', login);
+router.get('/staff', authenticateToken, getStaffList);
+router.post('/register-staff', authenticateToken, isAdmin, registerStaff);
+router.delete('/staff/:id', authenticateToken, isAdmin, deleteStaff);
 
 export default router;
