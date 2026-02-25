@@ -86,30 +86,30 @@ app.get('/api/admin/section/:sectionName', async (req: Request, res: Response) =
 // 2. ROUTES DES FILMS (Table 'movie')
 // ==========================================
 
-app.get('/movie', async (req: Request, res: Response) => {
-    try {
-        const searchQuery = req.query.search;
-        if (searchQuery) {
-            const [rows]: any = await db.query('SELECT * FROM movie WHERE title LIKE ?', [`%${searchQuery}%`]);
-            return res.json(rows);
-        }
-        const [rows]: any = await db.query('SELECT * FROM movie');
-        res.json(rows);
-    } catch (error) {
-        console.error("Erreur GET /movie:", error);
-        res.status(500).json({ error: "Erreur serveur" });
-    }
-});
+// app.get('/movie', async (req: Request, res: Response) => {
+//     try {
+//         const searchQuery = req.query.search;
+//         if (searchQuery) {
+//             const [rows]: any = await db.query('SELECT * FROM movie WHERE title LIKE ?', [`%${searchQuery}%`]);
+//             return res.json(rows);
+//         }
+//         const [rows]: any = await db.query('SELECT * FROM movie');
+//         res.json(rows);
+//     } catch (error) {
+//         console.error("Erreur GET /movie:", error);
+//         res.status(500).json({ error: "Erreur serveur" });
+//     }
+// });
 
-app.get('/api/movies', async (req: Request, res: Response) => {
-    try {
-        const [rows]: any = await db.query('SELECT * FROM movie ORDER BY id DESC LIMIT 3');
-        res.json(rows);
-    } catch (error) {
-        console.error("Erreur GET /api/movies:", error);
-        res.status(500).json({ error: "Erreur serveur" });
-    }
-});
+// app.get('/api/movies', async (req: Request, res: Response) => {
+//     try {
+//         const [rows]: any = await db.query('SELECT * FROM movie ORDER BY id DESC LIMIT 3');
+//         res.json(rows);
+//     } catch (error) {
+//         console.error("Erreur GET /api/movies:", error);
+//         res.status(500).json({ error: "Erreur serveur" });
+//     }
+// });
 
 // ==========================================
 // 3. MONTAGE DES ROUTES EXTERNES (Fusion dev)
@@ -117,6 +117,7 @@ app.get('/api/movies', async (req: Request, res: Response) => {
 // Note: On garde tes routes directes au-dessus, et on ajoute celles-ci en plus
 app.use('/api', siteRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/movie', routerMovie);
 
 // ==========================================
 // LANCEMENT DU SERVEUR

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import movieList from '../models/movie.model';
 import movieModel from '../models/movie.model';
 import { Director } from '../models/director.model';
+const multer = require('multer');
 
 const getAllMovies = async (req: Request, res: Response) => {
   try {
@@ -33,32 +34,38 @@ const getMovieById = async (req: Request, res: Response) => {
 };
 
 const createMovie = async (req: Request, res: Response) => {
-  // console.log(req.body);
   //ajout de dans la table director
   const { director,media,metadata, ia } = req.body;
+  console.log("blabla")
+
+  const file = req.file as Express.Multer.File;
+  console.log(director)
 
   if (director) {
-    const result = await Director.createDirector(director);
+    const result = await Director.createDirector(JSON.parse(director));
     // console.log(result);
   }
-  console.log(media,metadata, ia)
+
   if (media || metadata || ia) {
+    const metadataParse = JSON.parse(metadata);
+    const mediaParse = JSON.parse(media);
+    const iaParse = JSON.parse(ia);
     const movie = {
-      original_title: metadata.original_title,
-      english_title: metadata.original_title,
-      youtube_url: "",
-      cover_img: media.cover_img,
-      duration: metadata.duration,
-      ishybrid: ia.method,
+      original_title: metadataParse.original_title,
+      english_title: metadataParse.original_title,
+      youtube_url: "azeaze",
+      cover_img: mediaParse.cover_img,
+      duration: metadataParse.duration,
+      ishybrid: iaParse.method,
       language: "FR",
-      original_synopsis: metadata.original_synopsis,
-      english_synopsis: metadata.original_synopsis,
+      original_synopsis: metadataParse.original_synopsis,
+      english_synopsis: metadataParse.original_synopsis,
       creative_process: "",
       english_creative_process: "",
-      ia_tools: ia.stack,
-      hassubs: media.hassubs,
-      srt: media.srt,
-      status: media.status,
+      ia_tools: iaParse.stack,
+      hassubs: mediaParse.hassubs,
+      srt: mediaParse.srt,
+      status: mediaParse.status,
       director_id: 5,
     }
 
