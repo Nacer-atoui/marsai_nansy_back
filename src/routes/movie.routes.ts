@@ -10,4 +10,6 @@ routerMovie.get('/', MovieController.getAllMovies);
 
 routerMovie.get('/:id',MovieController.getMovieById);
 
+routerMovie.post('/' , MovieController.createMovie)
+
 export default routerMovie;
