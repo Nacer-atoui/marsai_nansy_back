@@ -7,6 +7,7 @@ import { TranslationService } from './services/TranslationService';
 import routerMovie from './routes/movie.routes'; 
 import siteRoutes from './routes/site.routes'; 
 import authRoutes from './routes/authRoutes';
+import routerRating from './routes/rating.routes';
 
 dotenv.config();
 const app = express();
@@ -14,6 +15,7 @@ const port = process.env.PORT || 3000;
 
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
+
 
 // ==========================================
 // 1. ROUTES DU CMS ET DES TRADUCTIONS
@@ -91,6 +93,7 @@ app.get('/api/admin/section/:sectionName', async (req: Request, res: Response) =
 app.use('/api', siteRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/movie', routerMovie);
+app.use('/api/votes', routerRating);
 
 // ==========================================
 // LANCEMENT DU SERVEUR AVEC AUTO-SYNC
