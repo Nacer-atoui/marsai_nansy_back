@@ -11,8 +11,22 @@ routerMovie.get('/', MovieController.getAllMovies);
 
 routerMovie.get('/:id',MovieController.getMovieById);
 
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.memoryStorage();
 
-routerMovie.post('/' , upload.single('video'), MovieController.createMovie)
+export const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // Limite à 100MB par exemple
+  }
+});
+
+routerMovie.post('/' , 
+    upload.fields(
+    [
+        { name: "video", maxCount: 1 },
+        { name: "cover_img", maxCount: 1 },
+        { name: "images", maxCount: 3 },
+    ])
+, MovieController.createMovie)
 
 export default routerMovie;

@@ -19,7 +19,7 @@ export const Director = {
         VALUES(?,?,?,?,?,?,?,?)
         `;
 
-    return db.query(sql, [
+    const [result] = await db.query(sql, [
       director.civility,
       director.firstname,
       director.lastname,
@@ -29,5 +29,6 @@ export const Director = {
       director.birthday,
       JSON.stringify(director.address),
     ]);
+    return (result as any).insertId;
   },
 };
