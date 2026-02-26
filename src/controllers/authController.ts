@@ -43,7 +43,7 @@ export const login = async (req: Request, res: Response) => {
             // On renvoie "role" au front pour ne pas casser ton code React
             return res.json({ 
                 token, 
-                user: { email: user.email, role: userRole } 
+                user: { email: user.email, role: userRole, id: user.id, } 
             });
         } else {
             console.log("❌ ÉCHEC : Mot de passe incorrect");
