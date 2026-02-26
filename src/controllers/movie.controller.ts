@@ -102,6 +102,10 @@ const createMovie = async (req: Request, res: Response) => {
       }
 
       const result = await movieModel.addMovie(movie);
+
+      if (result) {       
+        res.status(201).json({ message: "Film créé avec succès", movieId: result });
+      }
       // console.log(result);
     }
   }
