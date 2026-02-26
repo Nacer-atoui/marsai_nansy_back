@@ -23,7 +23,9 @@ export const upload = multer({
 routerMovie.post('/' , 
     upload.fields(
     [
-        { name: "video", maxCount: 1 }
+        { name: "video", maxCount: 1 },
+        { name: "cover_img", maxCount: 1 },
+        { name: "images", maxCount: 3 },
     ])
 , MovieController.createMovie)
 

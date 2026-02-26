@@ -39,6 +39,8 @@ const createMovie = async (req: Request, res: Response) => {
 
   if (req.files && !Array.isArray(req.files) && req.files.video) {
     const file = req.files.video[0] as Express.Multer.File;
+    const coverImg = req.files.cover_img ? (req.files.cover_img[0] as Express.Multer.File) : null;
+    const images = req.files.images ? (req.files.images as Express.Multer.File[]) : [];
   
 
     let videoUrl = "";
@@ -47,10 +49,32 @@ const createMovie = async (req: Request, res: Response) => {
       videoUrl = await uploadToScaleway(file, "movies");
     }
 
-    if (director) {
-      const result = await Director.createDirector(JSON.parse(director));
-      // console.log(result);
+    let coverImgUrl = "";
+    if (coverImg) {
+      coverImgUrl = await uploadToScaleway(coverImg, "movies");
     }
+
+    let imageUrls: string[] = [];
+    if (images && images.length > 0) {
+      for (const image of images) {
+        const imageUrl = await uploadToScaleway(image, "movies");
+        imageUrls.push(imageUrl);
+      }
+    }
+
+
+
+    // let id: number | false = false;
+    let id: number | false = false;
+
+    if (director) {
+      id = await Director.createDirector(JSON.parse(director));
+    }
+
+    if (id == false) {
+      return res.status(400).json({ error: "Erreur lors de la création du réalisateur" });
+    }
+
 
     if (media || metadata || ia) {
       const metadataParse = JSON.parse(metadata);
@@ -60,19 +84,20 @@ const createMovie = async (req: Request, res: Response) => {
         original_title: metadataParse.original_title,
         english_title: metadataParse.original_title,
         youtube_url: videoUrl,
-        cover_img: mediaParse.cover_img,
+        cover_img: coverImgUrl,
+        images: imageUrls,
         duration: metadataParse.duration,
         ishybrid: iaParse.method,
-        language: "FR",
+        language: metadataParse.language,
         original_synopsis: metadataParse.original_synopsis,
         english_synopsis: metadataParse.original_synopsis,
-        creative_process: "",
-        english_creative_process: "",
+        creative_process: metadataParse.language === "FR-FR" ? iaParse.creative_process : "",
+        english_creative_process: metadataParse.language === "EN-EN" ? iaParse.creative_process : "",
         ia_tools: iaParse.stack,
         hassubs: mediaParse.hassubs,
         srt: mediaParse.srt,
         status: mediaParse.status,
-        director_id: 1,
+        director_id: id,
       }
 
       const result = await movieModel.addMovie(movie);
