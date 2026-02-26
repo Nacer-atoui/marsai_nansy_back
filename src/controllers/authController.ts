@@ -30,7 +30,9 @@ export const login = async (req: Request, res: Response) => {
             console.log("🚀 CONNEXION ACCEPTÉE !");
             
             const secret = process.env.JWT_SECRET || 'secret_temporaire';
-            const userRole = user.role || 'admin';
+            
+            // 🔥 CHANGEMENT ICI : On lit 'job' (avec un fallback sur 'role' au cas où)
+            const userRole = user.job || user.role || 'admin';
 
             const token = jwt.sign(
                 { id: user.id, role: userRole }, 
@@ -38,6 +40,7 @@ export const login = async (req: Request, res: Response) => {
                 { expiresIn: '1d' }
             );
 
+            // On renvoie "role" au front pour ne pas casser ton code React
             return res.json({ 
                 token, 
                 user: { email: user.email, role: userRole } 
@@ -54,18 +57,20 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const registerStaff = async (req: Request, res: Response) => {
-    const { email, password, roleLabel } = req.body;
+    // 🔥 CHANGEMENT ICI : On accepte roleLabel, job ou role selon ce qu'envoie ton front
+    const { email, password, roleLabel, job, role } = req.body;
+    const finalJob = roleLabel || job || role || 'Staff'; 
+
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const [result]: any = await db.execute(
-            'INSERT INTO user (email, password, firstname, lastname, created_at) VALUES (?, ?, "Staff", "Membre", NOW())', 
-            [email, hashedPassword]
+        
+        // 🔥 CHANGEMENT ICI : On insère DIRECTEMENT dans la colonne `job` de la table `user`
+        // Plus de requêtes inutiles vers role et role_user !
+        await db.execute(
+            'INSERT INTO user (email, password, firstname, lastname, job, created_at) VALUES (?, ?, "Staff", "Membre", ?, NOW())', 
+            [email, hashedPassword, finalJob]
         );
-        const userId = result.insertId;
-        const [roleRows]: any = await db.execute('SELECT id FROM role WHERE name = ?', [roleLabel]);
-        if (roleRows.length > 0) {
-            await db.execute('INSERT INTO role_user (user_id, role_id) VALUES (?, ?)', [userId, roleRows[0].id]);
-        }
+        
         res.status(201).json({ message: "Membre créé avec succès" });
     } catch (e) {
         console.error(e);
@@ -86,23 +91,21 @@ export const deleteStaff = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     try {
-        // 1. On vérifie d'abord quel est le rôle de la personne qu'on veut supprimer
+        // 🔥 CHANGEMENT ICI : On lit simplement la colonne 'job' de la table user
         const [rows]: any = await db.execute(
-            `SELECT r.name FROM role r 
-             JOIN role_user ru ON r.id = ru.role_id 
-             WHERE ru.user_id = ?`, [id]
+            `SELECT job FROM user WHERE id = ?`, [id]
         );
 
-        const roleName = rows.length > 0 ? rows[0].name : '';
+        const roleName = rows.length > 0 ? rows[0].job : '';
 
-        // 2. SI C'EST UN SUPER ADMIN, ON BLOQUE !
-        if (roleName === 'Super Admin') {
+        // SI C'EST UN SUPER ADMIN, ON BLOQUE !
+        if (roleName === 'Super Admin' || roleName === 'super admin') {
             return res.status(403).json({ 
                 message: "Interdit : Impossible de supprimer un Super Admin." 
             });
         }
 
-        // 3. Sinon, on procède à la suppression
+        // Sinon, on procède à la suppression
         await db.execute('DELETE FROM user WHERE id = ?', [id]);
         res.json({ message: "Utilisateur supprimé avec succès" });
 

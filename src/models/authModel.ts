@@ -1,32 +1,32 @@
 import db from '../config/database';
 
+// 1. MISE À JOUR DU VIGILE TYPESCRIPT
 export interface User {
     id: number;
     email: string;
     password: string;
-    role: string;
+    job?: string;  // On ajoute job (le ? signifie que c'est optionnel / peut être NULL)
+    role?: string; // On garde role en optionnel pour ne pas brusquer ton code React
 }
 
-// Trouver un utilisateur (on utilise LEFT JOIN pour ne pas bloquer si le rôle est mal configuré)
+// 2. REQUÊTE NETTOYÉE POUR LE LOGIN
 export const findUserByEmail = async (email: string): Promise<User | null> => {
+    // Fini les jointures (JOIN) compliquées vers des tables qui n'existent plus !
+    // ASTUCE : On fait "job AS role" pour que ton front-end reçoive bien une variable "role" sans bugger.
     const sql = `
-        SELECT u.id, u.email, u.password, r.name AS role 
-        FROM user u
-        LEFT JOIN role_user ru ON u.id = ru.user_id
-        LEFT JOIN role r ON ru.role_id = r.id
-        WHERE u.email = ?
+        SELECT id, email, password, job, job AS role 
+        FROM user 
+        WHERE email = ?
     `;
     const [rows]: any = await db.execute(sql, [email]);
     return rows[0] || null;
 };
 
-// Exporter précisément cette fonction pour le contrôleur
+// 3. REQUÊTE NETTOYÉE POUR LA LISTE DU STAFF
 export const getAllStaff = async () => {
     const sql = `
-        SELECT u.id, u.email, r.name AS role 
-        FROM user u
-        LEFT JOIN role_user ru ON u.id = ru.user_id
-        LEFT JOIN role r ON ru.role_id = r.id
+        SELECT id, email, job, job AS role 
+        FROM user
     `;
     const [rows]: any = await db.execute(sql);
     return rows;
