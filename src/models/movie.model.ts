@@ -5,9 +5,27 @@ import db from '../config/database';
 // import { RowDataPacket } from 'mysql2'; // Puedes borrar esto si quieres el código más limpio
 
 // 1. Cambiamos el nombre de la variable a "getAll" (porque es la acción de obtener todo)
-const getAll = async () => {
-  const sql = 'SELECT * FROM movie';
-  const [rows] = await pool.query(sql);
+// 1. On ajoute les paramètres attendus avec des valeurs par défaut
+const getAll = async (userId: number = 0, searchQuery: string = '') => {
+  let sql = `
+      SELECT 
+          m.*, 
+          AVG(r.rate) as average_note,
+          MAX(CASE WHEN r.user_id = ? THEN 1 ELSE 0 END) as has_voted
+      FROM movie m
+      LEFT JOIN rating r ON m.id = r.movie_id
+  `;
+  let params: any[] = [userId];
+
+  // S'il y a une recherche, on l'ajoute à la requête
+  if (searchQuery) {
+      sql += ` WHERE m.original_title LIKE ?`;
+      params.push(`%${searchQuery}%`);
+  }
+
+  sql += ` GROUP BY m.id`;
+
+  const [rows] = await pool.query(sql, params);
   return rows;
 };
 
