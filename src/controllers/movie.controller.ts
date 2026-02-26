@@ -6,16 +6,17 @@ import { uploadToScaleway } from '../services/uploadService'
 
 const getAllMovies = async (req: Request, res: Response) => {
   try {
-    // 1. Appel au Modèle pour récupérer les données
-    const movies = await movieList.getAll();
+    // 1. On récupère les requêtes dans l'URL (ex: ?userId=1&search=film)
+    const userId = Number(req.query.userId) || 0;
+    const search = req.query.search ? String(req.query.search) : '';
 
-    // 2. Réponse succès  avec les données JSON
+    // 2. Appel au Modèle avec les bons paramètres
+    const movies = await movieList.getAll(userId, search);
+
+    // 3. Réponse succès
     res.json(movies);
   } catch (error: any) {
-    // 3. Gestion des erreurs serveur
-
     console.error('Erreur:', error.message);
-
     res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 };
