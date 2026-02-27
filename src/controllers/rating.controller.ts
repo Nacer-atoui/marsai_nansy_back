@@ -2,14 +2,28 @@ import { Request, Response } from 'express';
 import ratingModel from '../models/rating.model';
 
 const createRating = async (req: Request, res: Response) => {
-  const { movie_id, jury_id, note, comment } = req.body; 
+  // On récupère exactement ce que le Front envoie
+  const { movie_id, user_id, rate, comment } = req.body; 
+
+  // On vérifie les variables avec les bons noms
+  if (!movie_id || !user_id || rate === undefined) {
+    return res.status(400).json({ 
+      error: 'Données manquantes', 
+      received: { movie_id, user_id, rate } 
+    });
+  }
 
   try {
-    await ratingModel.addOrUpdateRating(movie_id, jury_id, note, comment);
-    res.json({ success: true, message: "Note enregistrée avec succès !" });
+    await ratingModel.addOrUpdateRating(
+      Number(movie_id), 
+      Number(user_id), 
+      Number(rate), 
+      comment || ""
+    );
+    res.json({ success: true, message: "Note enregistrée !" });
   } catch (error: any) {
-    console.error('Erreur notation:', error.message);
-    res.status(500).json({ error: 'Erreur interne du serveur lors de la notation' });
+    console.error('Erreur SQL détaillée:', error.message);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 };
 
