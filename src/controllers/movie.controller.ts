@@ -117,4 +117,35 @@ const createMovie = async (req: Request, res: Response) => {
   }
 };
 
-export default { getAllMovies, getMovieById, createMovie };
+// 4. METTRE A JOUR LE STATUT (Accepter / Refuser)
+const updateMovieStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const success = await movieModel.updateStatus(+id, status);
+    if (!success) return res.status(404).json({ error: "Film non trouvé" });
+    
+    res.json({ success: true, message: `Statut mis à jour en ${status}` });
+  } catch (error: any) {
+    console.error('Erreur updateMovieStatus:', error.message);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+};
+
+// 5. SUPPRIMER UN FILM
+const deleteMovie = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const success = await movieModel.deleteById(+id);
+    if (!success) return res.status(404).json({ error: "Film non trouvé" });
+    
+    res.json({ success: true, message: "Film supprimé avec succès" });
+  } catch (error: any) {
+    console.error('Erreur deleteMovie:', error.message);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+};
+
+export default { getAllMovies, getMovieById, createMovie, updateMovieStatus, deleteMovie };
