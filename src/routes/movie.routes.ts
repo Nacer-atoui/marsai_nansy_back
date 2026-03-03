@@ -11,6 +11,10 @@ routerMovie.get('/', MovieController.getAllMovies);
 
 routerMovie.get('/:id',MovieController.getMovieById);
 
+// Nouvelles routes d'administration
+routerMovie.patch('/:id/status', MovieController.updateMovieStatus);
+routerMovie.delete('/:id', MovieController.deleteMovie);
+
 const storage = multer.memoryStorage();
 
 export const upload = multer({ 

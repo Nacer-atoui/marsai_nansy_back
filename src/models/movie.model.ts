@@ -85,8 +85,8 @@ const addMovie = async (movie: movieType) => {
       original_title, english_title, submitted_at, youtube_url, cover_img, 
       duration, ishybrid, language, original_synopsis, english_synopsis, 
       creative_process, english_creative_process, ia_tools, hassubs, srt, 
-      status, director_id, created_at, images
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      status, director_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const values = [
     movie.original_title,
@@ -114,4 +114,22 @@ const addMovie = async (movie: movieType) => {
   return result.insertId;
 };
 
-export default { getAll, getById, addMovie };
+/**
+ * Met à jour le statut du film (ex: 'Accepted', 'Rejected')
+ */
+const updateStatus = async (id: number, status: string) => {
+  const sql = `UPDATE movie SET status = ? WHERE id = ?`;
+  const [result]: any = await db.query(sql, [status, id]);
+  return result.affectedRows > 0;
+};
+
+/**
+ * Supprime définitivement un film
+ */
+const deleteById = async (id: number) => {
+  const sql = `DELETE FROM movie WHERE id = ?`;
+  const [result]: any = await db.query(sql, [id]);
+  return result.affectedRows > 0;
+};
+
+export default { getAll, getById, addMovie, updateStatus, deleteById };
