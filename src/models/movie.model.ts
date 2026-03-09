@@ -82,8 +82,7 @@ const getById = async (id: number) => {
 const addMovie = async (movie: movieType) => {
   const sql = `
     INSERT INTO movie (
-      original_title, english_title, submitted_at, youtube_url, cover_img, 
-      duration, ishybrid, language, original_synopsis, english_synopsis, 
+      original_title, english_title, submitted_at, youtube_url, cover_img, duration, ishybrid, language, original_synopsis, english_synopsis, 
       creative_process, english_creative_process, ia_tools, hassubs, srt, 
       status, director_id
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
