@@ -3,6 +3,8 @@ import movieModel from '../models/movie.model';
 import { Director } from '../models/director.model';
 import { uploadToScaleway } from '../services/uploadService';
 import { TranslationService } from '../services/TranslationService';
+import { json } from 'stream/consumers';
+import { addCollab } from '../models/collaboratorModel';
 
 // 1. RÉCUPÉRER TOUS LES FILMS
 const getAllMovies = async (req: Request, res: Response) => {
@@ -22,7 +24,7 @@ const getMovieById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const movie = await movieModel.getById(+id);
-    if (!movie) return res.status(404).json({ error: "Film non trouvé" });
+    if (!movie) return res.status(404).json({ error: 'Film non trouvé' });
     res.json(movie);
   } catch (error: any) {
     console.error('Erreur getMovieById:', error.message);
@@ -35,40 +37,64 @@ const createMovie = async (req: Request, res: Response) => {
   try {
     const { director, media, metadata, ia } = req.body;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const collaborator = req.body.collaborator;
+    const check = checkCollab(JSON.parse(collaborator));
+    const checkDir = checkDirector(director)
 
-    if (!files || !files.video) return res.status(400).json({ error: "Vidéo manquante" });
+    console.log(metadata, ia, media);
+    //{"original_title":"azeae","original_synopsis":"azeaze","duration":29,"tags":"zaeaze","language":"FR-FR"} {"stack":"azeaze","method":false,"creative_process":"azeaze"} {"hassubs":false,"srt":"","statut":"Draft"}
+
+    if (metadata.original_title == "" || metadata.original_synopsis == "" || metadata.duration == 0 || metadata.tags == "" || metadata.language == "" || ia.stack == "" || ia.method == false || ia.creative_process =="" || media.hassubs== false || media.srt == "" || media.status == "") {
+      res.status(200).json({ error: "Veuillez bien remplir le formulaire" });
+    }
+
+
+    if (checkDir != null){
+      return res.status(400).json(checkDir)
+    }
+
+    if (check.length > 0) {
+      return res.status(201).json(check);
+    }
+
+    if (!files || !files.video)
+      return res.status(400).json({ error: 'Vidéo manquante' });
 
     // --- UPLOADS SCALEWAY ---
-    const videoUrl = await uploadToScaleway(files.video[0], "movies");
-    const coverImgUrl = files.cover_img ? await uploadToScaleway(files.cover_img[0], "movies") : "";
+    const videoUrl = await uploadToScaleway(files.video[0], 'movies');
+    const coverImgUrl = files.cover_img
+      ? await uploadToScaleway(files.cover_img[0], 'movies')
+      : '';
     let imageUrls: string[] = [];
     if (files.images) {
       for (const img of files.images) {
-        imageUrls.push(await uploadToScaleway(img, "movies"));
+        imageUrls.push(await uploadToScaleway(img, 'movies'));
       }
+      
     }
 
     // --- PARSING DES DONNÉES ---
     const directorData = JSON.parse(director);
+    checkDirector(director)
     const meta = JSON.parse(metadata);
     const iaData = JSON.parse(ia);
     const mediaData = JSON.parse(media);
 
     // --- CRÉATION RÉALISATEUR ---
     const directorId = await Director.createDirector(directorData);
-    if (!directorId) throw new Error("Erreur création réalisateur");
+    if (!directorId) throw new Error('Erreur création réalisateur');
 
     // --- LOGIQUE DE TRADUCTION DEEPL ---
-    console.log("🤖 Traduction DeepL en cours...");
-    const isFR = meta.language === "FR";
-    
+    console.log('🤖 Traduction DeepL en cours...');
+    const isFR = meta.language === 'FR';
+
     let titleFR, titleEN, synopsisFR, synopsisEN, creativeFR, creativeEN;
 
     if (isFR) {
       // Si le réalisateur écrit en FR
       titleFR = meta.original_title;
       synopsisFR = meta.original_synopsis;
-      creativeFR = iaData.creative_process || "";
+      creativeFR = iaData.creative_process || '';
 
       titleEN = await TranslationService.translate(titleFR, 'FR', 'EN');
       synopsisEN = await TranslationService.translate(synopsisFR, 'FR', 'EN');
@@ -77,7 +103,7 @@ const createMovie = async (req: Request, res: Response) => {
       // Si le réalisateur écrit en EN
       titleEN = meta.original_title;
       synopsisEN = meta.original_synopsis;
-      creativeEN = iaData.creative_process || "";
+      creativeEN = iaData.creative_process || '';
 
       titleFR = await TranslationService.translate(titleEN, 'EN', 'FR');
       synopsisFR = await TranslationService.translate(synopsisEN, 'EN', 'FR');
@@ -93,26 +119,31 @@ const createMovie = async (req: Request, res: Response) => {
       youtube_url: videoUrl,
       cover_img: coverImgUrl,
       duration: Number(meta.duration) || 0,
-      ishybrid: iaData.method === "hybrid" ? 1 : 0,
+      ishybrid: iaData.method === 'hybrid' ? 1 : 0,
       language: meta.language,
       original_synopsis: synopsisFR,
       english_synopsis: synopsisEN,
       creative_process: creativeFR,
       english_creative_process: creativeEN,
-      ia_tools: iaData.stack || "",
+      ia_tools: iaData.stack || '',
       hassubs: mediaData.hassubs ? 1 : 0,
       srt: mediaData.srt || null,
       status: 'Pending', // On utilise Pending pour ton ENUM
       director_id: directorId,
       created_at: new Date(),
-      images: JSON.stringify(imageUrls)
+      images: JSON.stringify(imageUrls),
     };
 
     const movieId = await movieModel.addMovie(movieData);
-    res.status(201).json({ success: true, movieId });
+    // console.log(collaborator)
 
+    await JSON.parse(collaborator).forEach((c: Collaborator) => {
+      addCollab(c, movieId);
+    });
+
+    res.status(201).json({ success: true, movieId });
   } catch (error: any) {
-    console.error("💥 Erreur creation:", error.message);
+    console.error('💥 Erreur creation:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -122,10 +153,10 @@ const updateMovieStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
+
     const success = await movieModel.updateStatus(+id, status);
-    if (!success) return res.status(404).json({ error: "Film non trouvé" });
-    
+    if (!success) return res.status(404).json({ error: 'Film non trouvé' });
+
     res.json({ success: true, message: `Statut mis à jour en ${status}` });
   } catch (error: any) {
     console.error('Erreur updateMovieStatus:', error.message);
@@ -137,15 +168,97 @@ const updateMovieStatus = async (req: Request, res: Response) => {
 const deleteMovie = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const success = await movieModel.deleteById(+id);
-    if (!success) return res.status(404).json({ error: "Film non trouvé" });
-    
-    res.json({ success: true, message: "Film supprimé avec succès" });
+    if (!success) return res.status(404).json({ error: 'Film non trouvé' });
+
+    res.json({ success: true, message: 'Film supprimé avec succès' });
   } catch (error: any) {
     console.error('Erreur deleteMovie:', error.message);
     res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 };
+interface directorType {
+  civility?: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phone: number;
+  country: string;
+  birthday: Date;
+  address: string;
+}
+interface movieType {
+  original_title: string;
+  english_title: string;
+  youtube_url?: string;
+  ishybrid: boolean;
+  language: string;
+  english_synopsis: string;
+  original_synopsis: string;
+  creative_process?: string;
+  english_creative_process?: string;
+  ia_tools?: string;
+  hassubs?: boolean;
+  director_id: number;
+  images: string[];
+  duration: number;
+  tags: string;
+}
 
-export default { getAllMovies, getMovieById, createMovie, updateMovieStatus, deleteMovie };
+interface Collaborator {
+  firstname: string;
+  lastname: string;
+  email: string;
+  job: string;
+  contribution: string;
+}
+function checkDirector(director:directorType){
+  if(
+    director.civility == "" ||
+    director.firstname == "" ||
+    director.lastname == "" ||
+    director.email == "" ||
+    director.phone == 0 ||
+    director.country == "" ||
+    director.birthday == null ||
+    director.address == "" 
+  )    
+  return {
+    key: 'director',
+    value:'Veuillez bien remplir les champs du realisateur',
+  };
+  }
+   
+
+function checkCollab(collaborator: Collaborator[]) {
+  // console.log(collaborator);
+  let check = collaborator.map(c => {
+    if (
+      c.contribution == '' ||
+      c.email == '' ||
+      c.firstname == '' ||
+      c.job == '' ||
+      c.lastname == ''
+    ) {
+      return {
+        key: 'collab',
+        value: 'Veuillez bien remplir les champs du collaborateur',
+      };
+    }
+  });
+
+  check = check.filter(function (element) {
+    return element !== undefined;
+  });
+
+  return check;
+}
+
+export default {
+  getAllMovies,
+  getMovieById,
+  createMovie,
+  updateMovieStatus,
+  deleteMovie,
+};
