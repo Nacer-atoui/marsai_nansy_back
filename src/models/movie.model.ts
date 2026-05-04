@@ -78,7 +78,6 @@ const getById = async (id: number) => {
 
 /**
  * Ajoute un nouveau film dans la base de données
- */
 const addMovie = async (movie: movieType) => {
   const sql = `
     INSERT INTO movie (
@@ -131,4 +130,4 @@ const deleteById = async (id: number) => {
   return result.affectedRows > 0;
 };
 
-export default { getAll, getById, addMovie, updateStatus, deleteById };
+export default { getAll, getById,updateStatus, deleteById };
