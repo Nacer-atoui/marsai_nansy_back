@@ -3,9 +3,12 @@ import movieModel from '../models/movie.model';
 import { Director } from '../models/director.model';
 import { uploadToScaleway } from '../services/uploadService';
 import { TranslationService } from '../services/TranslationService';
+import { directorType, movieType, Collaborator } from '../types/movies.types';
 import { json } from 'stream/consumers';
 import { addCollab } from '../models/collaboratorModel';
 
+
+console.log()
 // 1. RÉCUPÉRER TOUS LES FILMS
 const getAllMovies = async (req: Request, res: Response) => {
   try {
@@ -32,8 +35,64 @@ const getMovieById = async (req: Request, res: Response) => {
   }
 };
 
-// 3. CRÉER UN FILM (AVEC TRADUCTION INTÉGRALE)
-const createMovie = async (req: Request, res: Response) => {
+export const createMovie = async (req: Request, res: Response) => {
+  console.log(" EL CONTROLADOR RECIBIÓ TODO");
+  console.log("Director limpio:", req.body.director);
+  console.log(" Archivos recibidos:", req.files ? "Sí" : "No");
+
+  return res.status(200).json({ message: "Backend conectado perfectamente!" });
+};
+
+
+/*
+//validation 
+function checkDirector(director:directorType){
+  if(
+    director.civility == "" ||
+    director.firstname == "" ||
+    director.lastname == "" ||
+    director.email == "" ||
+    director.phone == 0 ||
+    director.country == "" ||
+    director.birthday == null ||
+    director.address == "" 
+  )    
+  return {
+    key: 'director',
+    value:'Veuillez bien remplir les champs du realisateur',
+  };
+  }
+
+//validation 
+ 
+function checkCollab(collaborator: Collaborator[]) {
+  // console.log(collaborator);
+  let check = collaborator.map(c => {
+    if (
+      c.contribution == '' ||
+      c.email == '' ||
+      c.firstname == '' ||
+      c.job == '' ||
+      c.lastname == ''
+    ) {
+      return {
+        key: 'collab',
+        value: 'Veuillez bien remplir les champs du collaborateur',
+      };
+    }
+  });
+
+  check = check.filter(function (element) {
+    return element !== undefined;
+  });
+
+  return check;
+}
+*/
+
+// 3. CRÉER UN FILM ET CREATION DE L'UTILISATEUR DIRECTOR ET COLLAB (AVEC TRADUCTION INTÉGRALE)
+
+/* const createMovie = async (req: Request, res: Response) => {
   try {
     const { director, media, metadata, ia } = req.body;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -43,12 +102,13 @@ const createMovie = async (req: Request, res: Response) => {
 
     console.log(metadata, ia, media);
     //{"original_title":"azeae","original_synopsis":"azeaze","duration":29,"tags":"zaeaze","language":"FR-FR"} {"stack":"azeaze","method":false,"creative_process":"azeaze"} {"hassubs":false,"srt":"","statut":"Draft"}
-
+   
+    //validation
     if (metadata.original_title == "" || metadata.original_synopsis == "" || metadata.duration == 0 || metadata.tags == "" || metadata.language == "" || ia.stack == "" || ia.method == false || ia.creative_process =="" || media.hassubs== false || media.srt == "" || media.status == "") {
       res.status(200).json({ error: "Veuillez bien remplir le formulaire" });
     }
-
-
+*/
+/*  validation 
     if (checkDir != null){
       return res.status(400).json(checkDir)
     }
@@ -60,6 +120,8 @@ const createMovie = async (req: Request, res: Response) => {
     if (!files || !files.video)
       return res.status(400).json({ error: 'Vidéo manquante' });
 
+
+     // services 
     // --- UPLOADS SCALEWAY ---
     const videoUrl = await uploadToScaleway(files.video[0], 'movies');
     const coverImgUrl = files.cover_img
@@ -84,6 +146,8 @@ const createMovie = async (req: Request, res: Response) => {
     const directorId = await Director.createDirector(directorData);
     if (!directorId) throw new Error('Erreur création réalisateur');
 
+
+    // traduction 
     // --- LOGIQUE DE TRADUCTION DEEPL ---
     console.log('🤖 Traduction DeepL en cours...');
     const isFR = meta.language === 'FR';
@@ -110,6 +174,9 @@ const createMovie = async (req: Request, res: Response) => {
       creativeFR = await TranslationService.translate(creativeEN, 'EN', 'FR');
     }
 
+
+
+    //  controller 
     // --- PRÉPARATION DONNÉES BDD ---
     // L'ordre ici doit matcher ton movie.model.ts
     const movieData: any = {
@@ -147,6 +214,7 @@ const createMovie = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+*/
 
 // 4. METTRE A JOUR LE STATUT (Accepter / Refuser)
 const updateMovieStatus = async (req: Request, res: Response) => {
@@ -178,87 +246,11 @@ const deleteMovie = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 };
-interface directorType {
-  civility?: string;
-  firstname: string;
-  lastname: string;
-  email: string;
-  phone: number;
-  country: string;
-  birthday: Date;
-  address: string;
-}
-interface movieType {
-  original_title: string;
-  english_title: string;
-  youtube_url?: string;
-  ishybrid: boolean;
-  language: string;
-  english_synopsis: string;
-  original_synopsis: string;
-  creative_process?: string;
-  english_creative_process?: string;
-  ia_tools?: string;
-  hassubs?: boolean;
-  director_id: number;
-  images: string[];
-  duration: number;
-  tags: string;
-}
-
-interface Collaborator {
-  firstname: string;
-  lastname: string;
-  email: string;
-  job: string;
-  contribution: string;
-}
-function checkDirector(director:directorType){
-  if(
-    director.civility == "" ||
-    director.firstname == "" ||
-    director.lastname == "" ||
-    director.email == "" ||
-    director.phone == 0 ||
-    director.country == "" ||
-    director.birthday == null ||
-    director.address == "" 
-  )    
-  return {
-    key: 'director',
-    value:'Veuillez bien remplir les champs du realisateur',
-  };
-  }
-   
-
-function checkCollab(collaborator: Collaborator[]) {
-  // console.log(collaborator);
-  let check = collaborator.map(c => {
-    if (
-      c.contribution == '' ||
-      c.email == '' ||
-      c.firstname == '' ||
-      c.job == '' ||
-      c.lastname == ''
-    ) {
-      return {
-        key: 'collab',
-        value: 'Veuillez bien remplir les champs du collaborateur',
-      };
-    }
-  });
-
-  check = check.filter(function (element) {
-    return element !== undefined;
-  });
-
-  return check;
-}
 
 export default {
   getAllMovies,
   getMovieById,
-  createMovie,
   updateMovieStatus,
+  createMovie,
   deleteMovie,
 };
